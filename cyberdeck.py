@@ -1,4 +1,5 @@
 import streamlit as st
+from math import ceil
 
 # Initial setup
 st.set_page_config(page_title="CyberDeck UI", layout="wide", initial_sidebar_state="collapsed")
@@ -15,6 +16,52 @@ grid_configs = {
     "5x5": (5, 5),
 }
 
+# Custom CSS for Cyberpunk theme
+st.markdown(
+    """
+    <style>
+    body {
+        background-color: black;
+        color: cyan;
+    }
+    .stButton>button {
+        width: 100%;
+        height: 100%;
+        background-color: black;
+        border: 2px solid cyan;
+        color: cyan;
+        border-radius: 10px;
+        font-size: 16px;
+        font-family: "Courier New", monospace;
+        transition: 0.3s;
+    }
+    .stButton>button:hover {
+        background-color: cyan;
+        color: black;
+    }
+    .stTextInput>div>input {
+        background-color: black;
+        border: 2px solid cyan;
+        color: cyan;
+        font-family: "Courier New", monospace;
+    }
+    .stSelectbox>div>div>div>select {
+        background-color: black;
+        border: 2px solid cyan;
+        color: cyan;
+        font-family: "Courier New", monospace;
+    }
+    .stSidebar {
+        background-color: black !important;
+    }
+    .stSidebar h2 {
+        color: cyan !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 # Session state initialization
 if "grid_config" not in st.session_state:
     st.session_state.grid_config = "3x3"
@@ -26,7 +73,7 @@ if "buttons" not in st.session_state:
 
 # Sidebar Configuration
 with st.sidebar:
-    st.title("CyberDeck Config")
+    st.header("CyberDeck Config")
     
     # Grid Size Selection
     new_config = st.selectbox("Grid Size", list(grid_configs.keys()), index=list(grid_configs.keys()).index(st.session_state.grid_config))
@@ -57,13 +104,18 @@ with st.sidebar:
 st.title("CyberDeck")
 cols, rows = grid_configs[st.session_state.grid_config]
 
+# Calculate button dimensions for full-screen grid layout
+button_height = f"{ceil(100 / rows)}vh"
+button_width = f"{ceil(100 / cols)}vw"
+
 # Render grid
 for row in range(rows):
-    cols_objects = st.columns(cols)
+    cols_objects = st.columns(cols, gap="small")
     for col_index, col in enumerate(cols_objects):
         button_index = row * cols + col_index
         if button_index < len(st.session_state.buttons):
             button = st.session_state.buttons[button_index]
-            if col.button(button["label"]):
-                st.write(f"Opening: {button['action']}")
-                st.experimental_rerun()
+            with col:
+                if st.button(button["label"], key=f"button-{button['id']}"):
+                    st.write(f"Opening: {button['action']}")
+                    st.experimental_rerun()
